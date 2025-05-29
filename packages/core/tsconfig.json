@@ -1,0 +1,9 @@
+{
+  "extends": "@beepboop/typescript-config/base.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["dist", "build", "node_modules"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  }
+} 

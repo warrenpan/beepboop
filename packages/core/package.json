@@ -1,0 +1,29 @@
+{
+  "name": "@beepboop/core",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "license": "MIT",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint \"src/**/*.ts*\"",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
+  },
+  "dependencies": {
+    "@zerodev/sdk": "^5.4.36",
+    "@zerodev/ecdsa-validator": "^5.4.9",
+    "ethers": "^6.11.1",
+    "viem": "^2.7.9"
+  },
+  "devDependencies": {
+    "@beepboop/eslint-config": "*",
+    "@beepboop/typescript-config": "*",
+    "eslint": "^8.56.0",
+    "tsup": "^8.0.2",
+    "typescript": "^5.8.2"
+  }
+} 
