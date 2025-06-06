@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 
 const BeepBoopWallet = () => {
   const [mounted, setMounted] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [currentPage, setCurrentPage] = useState('welcome'); // 'welcome', 'register', 'login', 'wallet'
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
@@ -12,16 +12,8 @@ const BeepBoopWallet = () => {
 
   if (!mounted) return null;
 
-  const handleRegister = async () => {
-    setIsRegistering(true);
-    // TODO: Implement passkey registration
-    console.log("Registering new account");
-    
-    // Simulate registration process
-    setTimeout(() => {
-      setIsRegistering(false);
-      alert("Registration successful! (Demo)");
-    }, 2000);
+  const handleRegister = () => {
+    setCurrentPage('register');
   };
 
   const handleLogin = async () => {
@@ -60,7 +52,138 @@ const BeepBoopWallet = () => {
     </svg>
   );
 
-  return (
+  // Registration Page Component
+  const RegistrationPage = () => {
+    const [username, setUsername] = useState("");
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [accountAddress, setAccountAddress] = useState("");
+
+    const handlePasskeyRegister = async () => {
+      if (!username.trim()) {
+        alert("Please enter a username");
+        return;
+      }
+
+      setIsRegistering(true);
+      
+      try {
+        // TODO: Integrate ZeroDev passkey registration
+        console.log("Creating passkey for username:", username);
+        
+        // Simulate passkey creation and account setup
+        setTimeout(() => {
+          const mockAddress = "0x" + Math.random().toString(16).substr(2, 40);
+          setAccountAddress(mockAddress);
+          setIsRegistering(false);
+          alert("Passkey created successfully! Account ready.");
+        }, 3000);
+        
+      } catch (error) {
+        console.error("Registration failed:", error);
+        setIsRegistering(false);
+        alert("Registration failed. Please try again.");
+      }
+    };
+
+    const goBack = () => {
+      setCurrentPage('welcome');
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <button
+              onClick={goBack}
+              className="absolute top-4 left-4 p-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              ← Back
+            </button>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4">
+              <span className="text-2xl">🔐</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Create Your Account</h1>
+            <p className="text-gray-600">Set up your secure passkey wallet</p>
+          </div>
+
+          {!accountAddress ? (
+            <>
+              {/* Username Input */}
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label htmlFor="reg-username" className="block text-sm font-medium text-gray-700 mb-2">
+                    Choose a username
+                  </label>
+                  <input
+                    id="reg-username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-gray-900 placeholder-gray-500"
+                    disabled={isRegistering}
+                  />
+                </div>
+              </div>
+
+              {/* Create Passkey Button */}
+              <button
+                onClick={handlePasskeyRegister}
+                disabled={isRegistering}
+                className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                {isRegistering ? (
+                  <>
+                    <Spinner />
+                    <span className="ml-2">Creating Passkey...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="mr-2">🔑</span>
+                    Create Passkey
+                  </>
+                )}
+              </button>
+
+              {/* Info Section */}
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                <h3 className="text-sm font-medium text-blue-900 mb-2">What is a passkey?</h3>
+                <p className="text-xs text-blue-700">
+                  A passkey uses your device's biometric authentication (fingerprint, face, etc.) 
+                  to securely access your wallet. No passwords needed!
+                </p>
+              </div>
+            </>
+          ) : (
+            /* Success State */
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">✅</span>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Account Created!</h2>
+              <p className="text-gray-600 mb-4">Your secure wallet is ready to use</p>
+              
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <p className="text-xs text-gray-500 mb-1">Your wallet address:</p>
+                <p className="font-mono text-sm text-gray-800 break-all">{accountAddress}</p>
+              </div>
+
+              <button
+                onClick={() => setCurrentPage('wallet')}
+                className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-medium rounded-lg hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
+              >
+                Open Wallet
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Welcome Page Component
+  const WelcomePage = () => (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         {/* Header */}
@@ -76,22 +199,14 @@ const BeepBoopWallet = () => {
         <div className="space-y-3">
           <button
             onClick={handleRegister}
-            disabled={isRegistering || isLoggingIn}
-            className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
           >
-            {isRegistering ? (
-              <>
-                <Spinner />
-                <span className="ml-2">Creating Account...</span>
-              </>
-            ) : (
-              "Register"
-            )}
+            Register
           </button>
 
           <button
             onClick={handleLogin}
-            disabled={isRegistering || isLoggingIn}
+            disabled={isLoggingIn}
             className="w-full flex items-center justify-center px-4 py-3 bg-white text-gray-700 font-medium rounded-lg border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
             {isLoggingIn ? (
@@ -107,6 +222,13 @@ const BeepBoopWallet = () => {
       </div>
     </div>
   );
+
+  // Render current page
+  if (currentPage === 'register') {
+    return <RegistrationPage />;
+  }
+
+  return <WelcomePage />;
 };
 
 export default BeepBoopWallet;
