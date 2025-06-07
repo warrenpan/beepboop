@@ -15,32 +15,24 @@ import { getEntryPoint, KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import React, { useState, useEffect } from 'react';
 import { createPublicClient, http } from "viem";
 import { sepolia } from "viem/chains";
-import { ENTRYPOINT_ADDRESS_V07_TYPE } from "permissionless/types"
 
-// ZeroDev configuration
-//const projectId = process.env.NEXT_PUBLIC_ZERODEV_PROJECT_ID || "b4bb59f8-71ab-45d7-b225-3b3be4e39db0";
-const BUNDLER_URL =
-    "https://rpc.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0/chain/11155111"
-const PAYMASTER_URL =
-    "https://rpc.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0/chain/11155111"
-const PASSKEY_SERVER_URL =
-    "https://passkeys.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0"
-const CHAIN = sepolia
+// ZeroDev configuration - Replace with your actual project ID
+const projectId = process.env.NEXT_PUBLIC_ZERODEV_PROJECT_ID || "your-project-id";
+const BUNDLER_URL = `https://rpc.zerodev.app/api/v2/bundler/${projectId}`;
+const PAYMASTER_URL = `https://rpc.zerodev.app/api/v2/paymaster/${projectId}`;
+const PASSKEY_SERVER_URL = `https://passkeys.zerodev.app/api/v3/${projectId}`;
+
+const CHAIN = sepolia;
 const entryPoint = getEntryPoint("0.7");
 const kernelVersion = KERNEL_V3_1;
 
-const contractAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863"
-const contractABI = parseAbi([
-    "function mint(address _to) public",
-    "function balanceOf(address owner) external view returns (uint256 balance)"
-])
-
 const publicClient = createPublicClient({
-    transport: http(BUNDLER_URL)
-})
+  transport: http(),
+  chain: CHAIN,
+});
 
-let kernelAccount: KernelSmartAccount<ENTRYPOINT_ADDRESS_V07_TYPE>
-let kernelClient: any
+let kernelAccount: any;
+let kernelClient: any;
 
 const BeepBoopWallet = () => {
   const [mounted, setMounted] = useState(false);
@@ -59,14 +51,61 @@ const BeepBoopWallet = () => {
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
-    // TODO: Implement passkey login
-    console.log("Logging in");
     
-    // Simulate login process
-    setTimeout(() => {
+    try {
+      console.log("Attempting passkey login");
+      
+      // Create WebAuthn key for login
+      const webAuthnKey = await toWebAuthnKey({
+        passkeyName: "beepboop-wallet", // Use a consistent name for login
+        passkeyServerUrl: PASSKEY_SERVER_URL,
+        mode: WebAuthnMode.Login,
+      });
+
+      // Create passkey validator
+      const passkeyValidator = await toPasskeyValidator(publicClient, {
+        webAuthnKey,
+        kernelVersion,
+        entryPoint,
+        validatorContractVersion: PasskeyValidatorContractVersion.V0_0_2,
+      });
+
+      // Create kernel account
+      kernelAccount = await createKernelAccount(publicClient, {
+        entryPoint,
+        kernelVersion,
+        plugins: {
+          sudo: passkeyValidator,
+        },
+      });
+
+      // Create kernel client with paymaster
+      kernelClient = createKernelAccountClient({
+        account: kernelAccount,
+        chain: CHAIN,
+        bundlerTransport: http(BUNDLER_URL),
+        paymaster: {
+          getPaymasterData: async (userOperation) => {
+            const zeroDevPaymaster = await createZeroDevPaymasterClient({
+              chain: CHAIN,
+              transport: http(PAYMASTER_URL),
+            });
+            return zeroDevPaymaster.sponsorUserOperation({
+              userOperation,
+            });
+          },
+        },
+      });
+
+      console.log("Login successful, account:", kernelAccount.address);
+      setCurrentPage('wallet');
+      
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert("Login failed. Please try again or register a new account.");
+    } finally {
       setIsLoggingIn(false);
-      alert("Login successful! (Demo)");
-    }, 2000);
+    }
   };
 
   // Spinner component for loading states
@@ -108,21 +147,58 @@ const BeepBoopWallet = () => {
       setIsRegistering(true);
       
       try {
-        // TODO: Integrate ZeroDev passkey registration
         console.log("Creating passkey for username:", username);
         
-        // Simulate passkey creation and account setup
-        setTimeout(() => {
-          const mockAddress = "0x" + Math.random().toString(16).substr(2, 40);
-          setAccountAddress(mockAddress);
-          setIsRegistering(false);
-          alert("Passkey created successfully! Account ready.");
-        }, 3000);
+        // Create WebAuthn key for registration
+        const webAuthnKey = await toWebAuthnKey({
+          passkeyName: username,
+          passkeyServerUrl: PASSKEY_SERVER_URL,
+          mode: WebAuthnMode.Register,
+        });
+
+        // Create passkey validator
+        const passkeyValidator = await toPasskeyValidator(publicClient, {
+          webAuthnKey,
+          kernelVersion,
+          entryPoint,
+          validatorContractVersion: PasskeyValidatorContractVersion.V0_0_2,
+        });
+
+        // Create kernel account
+        kernelAccount = await createKernelAccount(publicClient, {
+          entryPoint,
+          kernelVersion,
+          plugins: {
+            sudo: passkeyValidator,
+          },
+        });
+
+        // Create kernel client with paymaster
+        kernelClient = createKernelAccountClient({
+          account: kernelAccount,
+          chain: CHAIN,
+          bundlerTransport: http(BUNDLER_URL),
+          paymaster: {
+            getPaymasterData: async (userOperation) => {
+              const zeroDevPaymaster = await createZeroDevPaymasterClient({
+                chain: CHAIN,
+                transport: http(PAYMASTER_URL),
+              });
+              return zeroDevPaymaster.sponsorUserOperation({
+                userOperation,
+              });
+            },
+          },
+        });
+
+        console.log("Account created successfully:", kernelAccount.address);
+        setAccountAddress(kernelAccount.address);
         
       } catch (error) {
         console.error("Registration failed:", error);
-        setIsRegistering(false);
         alert("Registration failed. Please try again.");
+      } finally {
+        setIsRegistering(false);
       }
     };
 
@@ -132,7 +208,7 @@ const BeepBoopWallet = () => {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md relative">
           {/* Header */}
           <div className="text-center mb-8">
             <button
@@ -260,6 +336,65 @@ const BeepBoopWallet = () => {
             )}
           </button>
         </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-gray-500">
+            Powered by ZeroDev passkeys and account abstraction
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Wallet Page Component
+  const WalletPage = () => (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full mb-4">
+            <span className="text-2xl">💰</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Your Wallet</h1>
+          <p className="text-gray-600">Welcome to your secure stablecoin wallet</p>
+        </div>
+
+        {kernelAccount && (
+          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <p className="text-xs text-gray-500 mb-1">Wallet Address:</p>
+            <p className="font-mono text-sm text-gray-800 break-all">{kernelAccount.address}</p>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div className="bg-blue-50 rounded-lg p-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-700">USDC Balance</span>
+              <span className="text-lg font-bold text-blue-600">$0.00</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => alert("Send functionality coming soon!")}
+            className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200"
+          >
+            Send USDC
+          </button>
+
+          <button
+            onClick={() => alert("Receive functionality coming soon!")}
+            className="w-full px-4 py-3 bg-white text-gray-700 font-medium rounded-lg border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+          >
+            Receive USDC
+          </button>
+        </div>
+
+        <button
+          onClick={() => setCurrentPage('welcome')}
+          className="w-full mt-6 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          Sign Out
+        </button>
       </div>
     </div>
   );
@@ -267,6 +402,10 @@ const BeepBoopWallet = () => {
   // Render current page
   if (currentPage === 'register') {
     return <RegistrationPage />;
+  }
+
+  if (currentPage === 'wallet') {
+    return <WalletPage />;
   }
 
   return <WelcomePage />;

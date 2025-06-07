@@ -12,6 +12,8 @@
     "@zerodev/passkey-validator": "^5.5.5",
     "@zerodev/sdk": "^5.4.36",
     "next": "15.3.3",
+    "ox": "^0.6.7",
+    "permissionless": "^0.2.47",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
