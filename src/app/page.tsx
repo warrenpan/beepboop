@@ -1,5 +1,46 @@
 "use client";
+
+import {
+  createKernelAccount,
+  createKernelAccountClient,
+  createZeroDevPaymasterClient,
+} from "@zerodev/sdk";
+import {
+  PasskeyValidatorContractVersion,
+  WebAuthnMode,
+  toPasskeyValidator,
+  toWebAuthnKey,
+} from "@zerodev/passkey-validator";
+import { getEntryPoint, KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import React, { useState, useEffect } from 'react';
+import { createPublicClient, http } from "viem";
+import { sepolia } from "viem/chains";
+import { ENTRYPOINT_ADDRESS_V07_TYPE } from "permissionless/types"
+
+// ZeroDev configuration
+//const projectId = process.env.NEXT_PUBLIC_ZERODEV_PROJECT_ID || "b4bb59f8-71ab-45d7-b225-3b3be4e39db0";
+const BUNDLER_URL =
+    "https://rpc.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0/chain/11155111"
+const PAYMASTER_URL =
+    "https://rpc.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0/chain/11155111"
+const PASSKEY_SERVER_URL =
+    "https://passkeys.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0"
+const CHAIN = sepolia
+const entryPoint = getEntryPoint("0.7");
+const kernelVersion = KERNEL_V3_1;
+
+const contractAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863"
+const contractABI = parseAbi([
+    "function mint(address _to) public",
+    "function balanceOf(address owner) external view returns (uint256 balance)"
+])
+
+const publicClient = createPublicClient({
+    transport: http(BUNDLER_URL)
+})
+
+let kernelAccount: KernelSmartAccount<ENTRYPOINT_ADDRESS_V07_TYPE>
+let kernelClient: any
 
 const BeepBoopWallet = () => {
   const [mounted, setMounted] = useState(false);
