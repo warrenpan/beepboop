@@ -13,7 +13,7 @@ import {
 } from "@zerodev/passkey-validator";
 import { getEntryPoint, KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import React, { useState, useEffect } from 'react';
-import { createPublicClient, http, formatUnits, parseAbi } from "viem";
+import { createPublicClient, http, formatUnits, parseAbi, parseUnits, encodeFunctionData, isAddress } from "viem";
 import { sepolia } from "viem/chains";
 
 // ZeroDev configuration - Replace with your actual project ID
@@ -45,7 +45,7 @@ let kernelClient: any;
 
 const BeepBoopWallet = () => {
   const [mounted, setMounted] = useState(false);
-  const [currentPage, setCurrentPage] = useState('welcome'); // 'welcome', 'register', 'login', 'wallet'
+  const [currentPage, setCurrentPage] = useState('welcome'); // 'welcome', 'register', 'login', 'wallet', 'send'
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
@@ -356,7 +356,244 @@ const BeepBoopWallet = () => {
     </div>
   );
 
-  // Wallet Page Component
+  // Send USDC Page Component
+  const SendUSDCPage = () => {
+    const [recipient, setRecipient] = useState("");
+    const [amount, setAmount] = useState("");
+    const [isSending, setIsSending] = useState(false);
+    const [currentBalance, setCurrentBalance] = useState("0");
+    const [errors, setErrors] = useState({
+      recipient: "",
+      amount: "",
+    });
+
+    // Fetch current balance for validation
+    useEffect(() => {
+      const fetchBalance = async () => {
+        if (!kernelAccount?.address) return;
+        
+        try {
+          const balance = await publicClient.readContract({
+            address: USDC_CONTRACT_ADDRESS,
+            abi: USDC_ABI,
+            functionName: "balanceOf",
+            args: [kernelAccount.address],
+          });
+          setCurrentBalance(formatUnits(balance, 6));
+        } catch (error) {
+          console.error("Error fetching balance for send:", error);
+        }
+      };
+      
+      fetchBalance();
+    }, []);
+
+    // Validation function
+    const validateForm = () => {
+      const newErrors = { recipient: "", amount: "" };
+      let isValid = true;
+
+      // Validate recipient address
+      if (!recipient.trim()) {
+        newErrors.recipient = "Recipient address is required";
+        isValid = false;
+      } else if (!isAddress(recipient)) {
+        newErrors.recipient = "Invalid Ethereum address";
+        isValid = false;
+      }
+
+      // Validate amount
+      if (!amount.trim()) {
+        newErrors.amount = "Amount is required";
+        isValid = false;
+      } else {
+        const numAmount = parseFloat(amount);
+        if (isNaN(numAmount) || numAmount <= 0) {
+          newErrors.amount = "Amount must be greater than 0";
+          isValid = false;
+        } else if (numAmount > parseFloat(currentBalance)) {
+          newErrors.amount = "Insufficient balance";
+          isValid = false;
+        }
+      }
+
+      setErrors(newErrors);
+      return isValid;
+    };
+
+    // Handle send transaction
+    const handleSendUSDC = async () => {
+      if (!validateForm()) return;
+      if (!kernelClient || !kernelAccount) {
+        alert("Wallet not properly initialized");
+        return;
+      }
+
+      setIsSending(true);
+
+      try {
+        console.log(`Sending ${amount} USDC to ${recipient}`);
+
+        // Prepare USDC transfer call data
+        const transferCallData = encodeFunctionData({
+          abi: USDC_ABI,
+          functionName: "transfer",
+          args: [recipient as `0x${string}`, parseUnits(amount, 6)], // USDC has 6 decimals
+        });
+
+        // Send UserOp with USDC transfer
+        const userOpHash = await kernelClient.sendUserOperation({
+          callData: await kernelAccount.encodeCalls([
+            {
+              to: USDC_CONTRACT_ADDRESS,
+              value: BigInt(0), // No ETH value for ERC-20 transfer
+              data: transferCallData,
+            },
+          ]),
+        });
+
+        console.log("UserOp hash:", userOpHash);
+        alert(`Transaction submitted! UserOp hash: ${userOpHash}`);
+
+        // Wait for transaction confirmation
+        const receipt = await kernelClient.waitForUserOperationReceipt({
+          hash: userOpHash,
+        });
+
+        console.log("Transaction confirmed:", receipt);
+        alert(`✅ Transaction confirmed! ${amount} USDC sent to ${recipient}`);
+
+        // Navigate back to wallet and reset form
+        setRecipient("");
+        setAmount("");
+        setCurrentPage('wallet');
+
+      } catch (error) {
+        console.error("Send transaction failed:", error);
+        alert("Transaction failed. Please try again.");
+      } finally {
+        setIsSending(false);
+      }
+    };
+
+    const goBack = () => {
+      setCurrentPage('wallet');
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md relative">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <button
+              onClick={goBack}
+              className="absolute top-4 left-4 p-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              ← Back
+            </button>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4">
+              <span className="text-2xl">📤</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Send USDC</h1>
+            <p className="text-gray-600">Transfer USDC to another wallet</p>
+          </div>
+
+          {/* Balance Display */}
+          <div className="bg-blue-50 rounded-lg p-4 mb-6">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-700">Available Balance</span>
+              <span className="text-lg font-bold text-blue-600">${currentBalance} USDC</span>
+            </div>
+          </div>
+
+          {/* Send Form */}
+          <div className="space-y-4">
+            {/* Recipient Address */}
+            <div>
+              <label htmlFor="recipient" className="block text-sm font-medium text-gray-700 mb-2">
+                Recipient Address
+              </label>
+              <input
+                id="recipient"
+                type="text"
+                placeholder="0x..."
+                value={recipient}
+                onChange={(e) => setRecipient(e.target.value)}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors text-gray-900 placeholder-gray-500 ${
+                  errors.recipient ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500'
+                }`}
+                disabled={isSending}
+              />
+              {errors.recipient && (
+                <p className="mt-1 text-sm text-red-600">{errors.recipient}</p>
+              )}
+            </div>
+
+            {/* Amount */}
+            <div>
+              <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+                Amount (USDC)
+              </label>
+              <div className="relative">
+                <input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors text-gray-900 placeholder-gray-500 ${
+                    errors.amount ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500'
+                  }`}
+                  disabled={isSending}
+                />
+                <button
+                  onClick={() => setAmount(currentBalance)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-blue-500 hover:text-blue-700 font-medium"
+                  disabled={isSending}
+                >
+                  MAX
+                </button>
+              </div>
+              {errors.amount && (
+                <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
+              )}
+            </div>
+
+            {/* Send Button */}
+            <button
+              onClick={handleSendUSDC}
+              disabled={isSending || !recipient.trim() || !amount.trim()}
+              className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              {isSending ? (
+                <>
+                  <Spinner />
+                  <span className="ml-2">Sending...</span>
+                </>
+              ) : (
+                <>
+                  <span className="mr-2">📤</span>
+                  Send USDC
+                </>
+              )}
+            </button>
+
+            {/* Transaction Info */}
+            <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+              <h3 className="text-sm font-medium text-yellow-900 mb-2">Transaction Details</h3>
+              <ul className="text-xs text-yellow-700 space-y-1">
+                <li>• Network: Sepolia Testnet</li>
+                <li>• Gas fees: Sponsored by paymaster</li>
+                <li>• Transaction is irreversible</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
   const WalletPage = () => {
     const [usdcBalance, setUsdcBalance] = useState("0.00");
     const [isLoadingBalance, setIsLoadingBalance] = useState(true);
@@ -450,7 +687,7 @@ const BeepBoopWallet = () => {
             </div>
 
             <button
-              onClick={() => alert("Send functionality coming soon!")}
+              onClick={() => setCurrentPage('send')}
               className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200"
             >
               Send USDC
@@ -478,6 +715,10 @@ const BeepBoopWallet = () => {
   // Render current page
   if (currentPage === 'register') {
     return <RegistrationPage />;
+  }
+
+  if (currentPage === 'send') {
+    return <SendUSDCPage />;
   }
 
   if (currentPage === 'wallet') {
