@@ -17,10 +17,9 @@ import { createPublicClient, http, formatUnits, parseAbi, parseUnits, encodeFunc
 import { sepolia } from "viem/chains";
 
 // ZeroDev configuration - Replace with your actual project ID
-const projectId = process.env.NEXT_PUBLIC_ZERODEV_PROJECT_ID || "your-project-id";
-const BUNDLER_URL = `https://rpc.zerodev.app/api/v2/bundler/${projectId}`;
-const PAYMASTER_URL = `https://rpc.zerodev.app/api/v2/paymaster/${projectId}`;
-const PASSKEY_SERVER_URL = `https://passkeys.zerodev.app/api/v3/${projectId}`;
+const BUNDLER_URL = "https://rpc.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0/chain/11155111";
+const PAYMASTER_URL = "https://rpc.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0/chain/11155111";
+const PASSKEY_SERVER_URL = "https://passkeys.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0";
 
 const CHAIN = sepolia;
 const entryPoint = getEntryPoint("0.7");
@@ -356,12 +355,14 @@ const BeepBoopWallet = () => {
     </div>
   );
 
-  // Send USDC Page Component
+  // Send USDC Page Component - Improved version modeled after tutorial
   const SendUSDCPage = () => {
     const [recipient, setRecipient] = useState("");
     const [amount, setAmount] = useState("");
     const [isSending, setIsSending] = useState(false);
     const [currentBalance, setCurrentBalance] = useState("0");
+    const [userOpHash, setUserOpHash] = useState("");
+    const [userOpStatus, setUserOpStatus] = useState("");
     const [errors, setErrors] = useState({
       recipient: "",
       amount: "",
@@ -393,7 +394,6 @@ const BeepBoopWallet = () => {
       const newErrors = { recipient: "", amount: "" };
       let isValid = true;
 
-      // Validate recipient address
       if (!recipient.trim()) {
         newErrors.recipient = "Recipient address is required";
         isValid = false;
@@ -402,7 +402,6 @@ const BeepBoopWallet = () => {
         isValid = false;
       }
 
-      // Validate amount
       if (!amount.trim()) {
         newErrors.amount = "Amount is required";
         isValid = false;
@@ -421,56 +420,60 @@ const BeepBoopWallet = () => {
       return isValid;
     };
 
-    // Handle send transaction
+    // Handle send transaction - modeled after tutorial's sendUserOp
     const handleSendUSDC = async () => {
       if (!validateForm()) return;
-      if (!kernelClient || !kernelAccount) {
-        alert("Wallet not properly initialized");
-        return;
-      }
-
+      
       setIsSending(true);
+      setUserOpStatus("Sending USDC...");
+      setUserOpHash("");
 
       try {
         console.log(`Sending ${amount} USDC to ${recipient}`);
 
-        // Prepare USDC transfer call data
-        const transferCallData = encodeFunctionData({
-          abi: USDC_ABI,
-          functionName: "transfer",
-          args: [recipient as `0x${string}`, parseUnits(amount, 6)], // USDC has 6 decimals
-        });
-
-        // Send UserOp with USDC transfer
+        // Send UserOp with USDC transfer - following tutorial pattern
         const userOpHash = await kernelClient.sendUserOperation({
           callData: await kernelAccount.encodeCalls([
             {
               to: USDC_CONTRACT_ADDRESS,
-              value: BigInt(0), // No ETH value for ERC-20 transfer
-              data: transferCallData,
+              value: BigInt(0),
+              data: encodeFunctionData({
+                abi: USDC_ABI,
+                functionName: "transfer",
+                args: [recipient as `0x${string}`, parseUnits(amount, 6)],
+              }),
             },
           ]),
         });
 
-        console.log("UserOp hash:", userOpHash);
-        alert(`Transaction submitted! UserOp hash: ${userOpHash}`);
+        console.log("UserOp submitted:", userOpHash);
+        setUserOpHash(userOpHash);
+        setUserOpStatus("Transaction submitted, waiting for confirmation...");
 
-        // Wait for transaction confirmation
+        // Wait for the UserOp to be included on-chain - following tutorial pattern
         const receipt = await kernelClient.waitForUserOperationReceipt({
           hash: userOpHash,
         });
 
-        console.log("Transaction confirmed:", receipt);
-        alert(`✅ Transaction confirmed! ${amount} USDC sent to ${recipient}`);
+        console.log("UserOp confirmed:", receipt.userOpHash);
+        console.log("TxHash:", receipt.receipt.transactionHash);
+        
+        // Update status with success message including link
+        const successMessage = `✅ Transaction confirmed! <a href="https://jiffyscan.xyz/userOpHash/${userOpHash}?network=sepolia" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-700">View on JiffyScan</a>`;
+        setUserOpStatus(successMessage);
 
-        // Navigate back to wallet and reset form
-        setRecipient("");
-        setAmount("");
-        setCurrentPage('wallet');
+        // Optional: Auto-navigate back after a delay
+        setTimeout(() => {
+          setRecipient("");
+          setAmount("");
+          setUserOpHash("");
+          setUserOpStatus("");
+          setCurrentPage('wallet');
+        }, 3000);
 
       } catch (error) {
         console.error("Send transaction failed:", error);
-        alert("Transaction failed. Please try again.");
+        setUserOpStatus("❌ Transaction failed. Please try again.");
       } finally {
         setIsSending(false);
       }
@@ -580,6 +583,27 @@ const BeepBoopWallet = () => {
               )}
             </button>
 
+            {/* UserOp Status Display - Following tutorial pattern */}
+            {userOpHash && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <div className="text-sm">
+                  <p className="font-medium text-gray-900 mb-2">Transaction Status:</p>
+                  <div
+                    className="text-gray-700"
+                    dangerouslySetInnerHTML={{
+                      __html: userOpStatus
+                    }}
+                  />
+                  {userOpHash && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500">UserOp Hash:</p>
+                      <p className="font-mono text-xs text-gray-800 break-all">{userOpHash}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Transaction Info */}
             <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
               <h3 className="text-sm font-medium text-yellow-900 mb-2">Transaction Details</h3>
@@ -594,6 +618,8 @@ const BeepBoopWallet = () => {
       </div>
     );
   };
+
+  // Wallet Page Component
   const WalletPage = () => {
     const [usdcBalance, setUsdcBalance] = useState("0.00");
     const [isLoadingBalance, setIsLoadingBalance] = useState(true);
