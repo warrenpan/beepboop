@@ -2,31 +2,20 @@
   "name": "beepboop",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@zerodev/passkey-validator": "^5.5.5",
-    "@zerodev/permissions": "^5.5.8",
-    "@zerodev/sdk": "^5.4.36",
-    "next": "15.3.3",
-    "ox": "^0.6.7",
-    "permissionless": "^0.2.47",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "clean": "turbo run clean"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.3.3",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "turbo": "^2.3.3"
+  },
+  "packageManager": "npm@10.2.4"
 }
