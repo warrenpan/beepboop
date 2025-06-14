@@ -1,0 +1,23 @@
+{
+  "name": "@beepboop/wallet-core",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@zerodev/sdk": "^5.0.0",
+    "@zerodev/passkey-validator": "^5.0.0",
+    "@zerodev/permissions": "^5.0.0",
+    "permissionless": "^0.1.0",
+    "viem": "^2.0.0"
+  }
+}
