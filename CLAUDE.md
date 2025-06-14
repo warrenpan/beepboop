@@ -68,7 +68,7 @@ The app uses React state management with multiple pages/modes:
 - USDC contract address is hardcoded for testnet: `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`
 - Uses Geist fonts (Sans and Mono) loaded from Google Fonts
 
-## Recommanded Structure
+## Recommended Structure
   beepboop/
   ├── apps/
   │   ├── mobile/                   # React Native mobile app
