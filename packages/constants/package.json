@@ -10,6 +10,10 @@
     "lint": "eslint src/",
     "type-check": "tsc --noEmit"
   },
+  "dependencies": {
+    "@zerodev/sdk": "^5.4.36",
+    "viem": "^2.31.0"
+  },
   "devDependencies": {
     "typescript": "^5"
   }

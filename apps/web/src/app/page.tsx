@@ -11,28 +11,22 @@ import {
   toPasskeyValidator,
   toWebAuthnKey,
 } from "@zerodev/passkey-validator";
-import { getEntryPoint, KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import React, { useState, useEffect } from 'react';
-import { createPublicClient, http, formatUnits, parseAbi, parseUnits, encodeFunctionData, isAddress } from "viem";
-import { sepolia } from "viem/chains";
+import { createPublicClient, http, formatUnits, parseUnits, encodeFunctionData, isAddress } from "viem";
+import {
+  BUNDLER_URL,
+  PAYMASTER_URL,
+  PASSKEY_SERVER_URL,
+  CHAIN,
+  ENTRY_POINT,
+  KERNEL_VERSION,
+  USDC_CONTRACT_ADDRESS,
+  USDC_ABI,
+  USDC_DECIMALS,
+  DEFAULT_PASSKEY_NAME,
+  TRANSACTION_SUCCESS_DELAY
+} from "@beepboop/constants";
 
-// ZeroDev configuration - Replace with your actual project ID
-const BUNDLER_URL = "https://rpc.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0/chain/11155111";
-const PAYMASTER_URL = "https://rpc.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0/chain/11155111";
-const PASSKEY_SERVER_URL = "https://passkeys.zerodev.app/api/v3/b4bb59f8-71ab-45d7-b225-3b3be4e39db0";
-
-const CHAIN = sepolia;
-const entryPoint = getEntryPoint("0.7");
-const kernelVersion = KERNEL_V3_1;
-
-// USDC contract on Sepolia testnet
-const USDC_CONTRACT_ADDRESS = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"; // Sepolia USDC
-const USDC_ABI = parseAbi([
-  "function balanceOf(address owner) external view returns (uint256)",
-  "function decimals() external view returns (uint8)",
-  "function symbol() external view returns (string)",
-  "function transfer(address to, uint256 amount) external returns (bool)",
-]);
 
 const publicClient = createPublicClient({
   transport: http(),
@@ -65,7 +59,7 @@ const BeepBoopWallet = () => {
       
       // Create WebAuthn key for login
       const webAuthnKey = await toWebAuthnKey({
-        passkeyName: "beepboop-wallet", // Use a consistent name for login
+        passkeyName: DEFAULT_PASSKEY_NAME,
         passkeyServerUrl: PASSKEY_SERVER_URL,
         mode: WebAuthnMode.Login,
       });
@@ -73,15 +67,15 @@ const BeepBoopWallet = () => {
       // Create passkey validator
       const passkeyValidator = await toPasskeyValidator(publicClient, {
         webAuthnKey,
-        kernelVersion,
-        entryPoint,
+        kernelVersion: KERNEL_VERSION,
+        entryPoint: ENTRY_POINT,
         validatorContractVersion: PasskeyValidatorContractVersion.V0_0_2,
       });
 
       // Create kernel account
       kernelAccount = await createKernelAccount(publicClient, {
-        entryPoint,
-        kernelVersion,
+        entryPoint: ENTRY_POINT,
+        kernelVersion: KERNEL_VERSION,
         plugins: {
           sudo: passkeyValidator,
         },
@@ -94,7 +88,7 @@ const BeepBoopWallet = () => {
         bundlerTransport: http(BUNDLER_URL),
         paymaster: {
           getPaymasterData: async (userOperation) => {
-            const zeroDevPaymaster = await createZeroDevPaymasterClient({
+            const zeroDevPaymaster = createZeroDevPaymasterClient({
               chain: CHAIN,
               transport: http(PAYMASTER_URL),
             });
@@ -167,15 +161,15 @@ const BeepBoopWallet = () => {
         // Create passkey validator
         const passkeyValidator = await toPasskeyValidator(publicClient, {
           webAuthnKey,
-          kernelVersion,
-          entryPoint,
+          kernelVersion: KERNEL_VERSION,
+          entryPoint: ENTRY_POINT,
           validatorContractVersion: PasskeyValidatorContractVersion.V0_0_2,
         });
 
         // Create kernel account
         kernelAccount = await createKernelAccount(publicClient, {
-          entryPoint,
-          kernelVersion,
+          entryPoint: ENTRY_POINT,
+          kernelVersion: KERNEL_VERSION,
           plugins: {
             sudo: passkeyValidator,
           },
@@ -188,7 +182,7 @@ const BeepBoopWallet = () => {
           bundlerTransport: http(BUNDLER_URL),
           paymaster: {
             getPaymasterData: async (userOperation) => {
-              const zeroDevPaymaster = await createZeroDevPaymasterClient({
+              const zeroDevPaymaster = createZeroDevPaymasterClient({
                 chain: CHAIN,
                 transport: http(PAYMASTER_URL),
               });
@@ -380,7 +374,7 @@ const BeepBoopWallet = () => {
             functionName: "balanceOf",
             args: [kernelAccount.address],
           });
-          setCurrentBalance(formatUnits(balance, 6));
+          setCurrentBalance(formatUnits(balance, USDC_DECIMALS));
         } catch (error) {
           console.error("Error fetching balance for send:", error);
         }
@@ -440,7 +434,7 @@ const BeepBoopWallet = () => {
               data: encodeFunctionData({
                 abi: USDC_ABI,
                 functionName: "transfer",
-                args: [recipient as `0x${string}`, parseUnits(amount, 6)],
+                args: [recipient as `0x${string}`, parseUnits(amount, USDC_DECIMALS)],
               }),
             },
           ]),
@@ -469,7 +463,7 @@ const BeepBoopWallet = () => {
           setUserOpHash("");
           setUserOpStatus("");
           setCurrentPage('wallet');
-        }, 3000);
+        }, TRANSACTION_SUCCESS_DELAY);
 
       } catch (error) {
         console.error("Send transaction failed:", error);
@@ -641,7 +635,7 @@ const BeepBoopWallet = () => {
         });
 
         // Format balance (USDC has 6 decimals)
-        const formattedBalance = formatUnits(balance, 6);
+        const formattedBalance = formatUnits(balance, USDC_DECIMALS);
         setUsdcBalance(parseFloat(formattedBalance).toFixed(2));
         
         console.log("USDC Balance:", formattedBalance);

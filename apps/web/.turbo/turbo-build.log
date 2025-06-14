@@ -1,27 +1,14 @@
 
-
 > @beepboop/web@1.0.0 build
 > next build
 
-[1G[0K   [1m[38;2;173;127;168m▲ Next.js 15.3.3[39m[22m
+   ▲ Next.js 15.3.3
 
- [37m[1m [22m[39m Creating an optimized production build ...
- [32m[1m✓[22m[39m Compiled successfully in 2000ms
-[?25l [37m[1m [22m[39m Linting and checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Linting and checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Linting and checking validity of types  [36m...[39m[2K[1G [37m[1m [22m[39m Linting and checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Linting and checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Linting and checking validity of types  [36m...[39m[2K[1G[?25h[31m
-Failed to compile.[39m
-[?25l [36m.[39m [2K[1G[?25h
-./src/app/page.tsx
-42:20  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-43:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-278:45  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
-659:8  Warning: React Hook useEffect has an unnecessary dependency: 'kernelAccount'. Either exclude it or remove the dependency array. Outer scope values like 'kernelAccount' aren't valid dependencies because mutating them doesn't re-render the component.  react-hooks/exhaustive-deps
-
-info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
-[?25l [36m.[39m [?25h[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m Lifecycle script `build` failed with error:
-[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m [94mcode[39m [33m1[39m
-[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m [94mpath[39m /Users/warren/beepboop/apps/web
-[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m [94mworkspace[39m @beepboop/web@1.0.0
-[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m [94mlocation[39m /Users/warren/beepboop/apps/web
-[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m command failed
-[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m [94mcommand[39m sh -c next build
-[1G[0K⠙[1G[0K
+   Creating an optimized production build ...
+npm error Lifecycle script `build` failed with error:
+npm error code 130
+npm error path /Users/warren/beepboop/apps/web
+npm error workspace @beepboop/web@1.0.0
+npm error location /Users/warren/beepboop/apps/web
+npm error command failed
+npm error command sh -c next build

@@ -14,10 +14,11 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@zerodev/sdk": "^5.0.0",
-    "@zerodev/passkey-validator": "^5.0.0",
-    "@zerodev/permissions": "^5.0.0",
-    "permissionless": "^0.1.0",
-    "viem": "^2.0.0"
+    "@beepboop/constants": "workspace:*",
+    "@zerodev/sdk": "^5.4.36",
+    "@zerodev/passkey-validator": "^5.5.5",
+    "@zerodev/permissions": "^5.5.8",
+    "permissionless": "^0.2.47",
+    "viem": "^2.31.0"
   }
 }
