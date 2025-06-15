@@ -1,13 +1,4 @@
 
-> @beepboop/wallet-core@0.0.0 build
+> @beepboop/wallet-core@0.0.0 build /Users/warren/beepboop/packages/wallet-core
 > tsc
 
-src/auth.ts(56,7): error TS2322: Type 'PasskeyValidatorContractVersion | undefined' is not assignable to type 'PasskeyValidatorContractVersion'.
-  Type 'undefined' is not assignable to type 'PasskeyValidatorContractVersion'.
-npm error Lifecycle script `build` failed with error:
-npm error code 2
-npm error path /Users/warren/beepboop/packages/wallet-core
-npm error workspace @beepboop/wallet-core@0.0.0
-npm error location /Users/warren/beepboop/packages/wallet-core
-npm error command failed
-npm error command sh -c tsc

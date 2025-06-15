@@ -1,4 +1,4 @@
 
-> @beepboop/blockchain@0.0.0 build
+> @beepboop/blockchain@0.0.0 build /Users/warren/beepboop/packages/blockchain
 > tsc
 

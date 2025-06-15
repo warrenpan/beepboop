@@ -1,0 +1,4 @@
+
+> @beepboop/web@1.0.0 type-check /Users/warren/beepboop/apps/web
+> tsc --noEmit
+

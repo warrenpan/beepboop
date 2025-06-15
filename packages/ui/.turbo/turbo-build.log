@@ -1,4 +1,4 @@
 
-> @beepboop/ui@1.0.0 build
+> @beepboop/ui@1.0.0 build /Users/warren/beepboop/packages/ui
 > tsc
 

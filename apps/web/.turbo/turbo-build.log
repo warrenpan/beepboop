@@ -1,14 +1,8 @@
 
-> @beepboop/web@1.0.0 build
+> @beepboop/web@1.0.0 build /Users/warren/beepboop/apps/web
 > next build
 
    ▲ Next.js 15.3.3
 
    Creating an optimized production build ...
-npm error Lifecycle script `build` failed with error:
-npm error code 130
-npm error path /Users/warren/beepboop/apps/web
-npm error workspace @beepboop/web@1.0.0
-npm error location /Users/warren/beepboop/apps/web
-npm error command failed
-npm error command sh -c next build
+ ELIFECYCLE  Command failed with exit code 130.

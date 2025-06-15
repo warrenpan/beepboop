@@ -18,7 +18,7 @@ export declare class Stablecoin {
     encodeTransfer(params: TransferParams): string;
     createTransferCall(params: TransferParams): {
         to: string;
-        value: bigint;
+        value: any;
         data: string;
     };
 }

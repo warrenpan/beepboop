@@ -16,7 +16,7 @@ export declare class TransferManager {
     validateTransfer(recipient: string, amount: string, currentBalance: string): TransferValidation;
     createTransferCall(params: TransferParams): {
         to: string;
-        value: bigint;
+        value: any;
         data: string;
     };
     sendTransfer(kernelAccount: any, kernelClient: any, params: TransferParams): Promise<string>;

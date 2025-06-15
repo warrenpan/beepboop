@@ -10,23 +10,26 @@ BeepBoop is a Next.js-based stablecoin wallet application built as a Turborepo m
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Start development server (runs on http://localhost:3000)
-npm run dev
+pnpm run dev
 
 # Build all apps and packages
-npm run build
+pnpm run build
 
 # Type checking
-npm run type-check
+pnpm run type-check
 
 # Linting
-npm run lint
+pnpm run lint
 
 # Clean build artifacts
-npm run clean
+pnpm run clean
 ```
+
+### Package Manager
+This project uses **pnpm** for dependency management, not npm. The workspace dependencies use the `workspace:*` protocol which is only supported by pnpm and yarn. The project includes a `pnpm-workspace.yaml` file that defines the workspace structure.
 
 ## Architecture
 

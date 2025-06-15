@@ -1,0 +1,7 @@
+
+> @beepboop/wallet-core@0.0.0 type-check /Users/warren/beepboop/packages/wallet-core
+> tsc --noEmit
+
+src/auth.ts(26,5): error TS2584: Cannot find name 'console'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+src/auth.ts(39,5): error TS2584: Cannot find name 'console'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+ ELIFECYCLE  Command failed with exit code 2.

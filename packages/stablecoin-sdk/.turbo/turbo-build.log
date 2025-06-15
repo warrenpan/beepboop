@@ -1,4 +1,13 @@
 
-> @beepboop/stablecoin-sdk@0.0.0 build
+> @beepboop/stablecoin-sdk@0.0.0 build /Users/warren/beepboop/packages/stablecoin-sdk
 > tsc
 
+src/balance.ts(18,7): error TS2584: Cannot find name 'console'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+src/balance.ts(28,7): error TS2584: Cannot find name 'console'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+src/balance.ts(32,7): error TS2584: Cannot find name 'console'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+src/stablecoin.ts(58,14): error TS2583: Cannot find name 'BigInt'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2020' or later.
+src/transfers.ts(58,5): error TS2584: Cannot find name 'console'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+src/transfers.ts(66,5): error TS2584: Cannot find name 'console'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+src/transfers.ts(75,5): error TS2584: Cannot find name 'console'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+src/transfers.ts(76,5): error TS2584: Cannot find name 'console'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+ ELIFECYCLE  Command failed with exit code 2.
